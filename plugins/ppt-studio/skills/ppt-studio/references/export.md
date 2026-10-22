@@ -20,4 +20,22 @@ Verify the PPTX in PowerPoint or a compatible renderer when available; otherwise
 
 The upstream `scripts/export-pdf.sh` remains as a legacy path; this project's Node checker is the cross-platform default and does not automatically download dependencies. `scripts/extract-pptx.py` remains the inbound PPTX extractor and requires python-pptx. Unsupported source objects need visual inspection rather than silent omission.
 
+Use a fresh output directory for extraction and exports: generated filenames may replace existing output files. The legacy shell exporter installs Playwright and Chromium in a temporary directory, may load the deck's remote fonts/resources, and requires an authorized network-enabled setup. Its temporary asset server binds only to loopback and rejects paths or symlinks outside the presentation directory. Neither exporter is a sandbox for hostile HTML; render only decks you trust. The Node checker blocks HTTP(S) resource requests for offline QA, not every possible browser network channel.
+
 Public hosting and uploads are separate user requests. Offline files and local exports do not require deployment.
+
+## Optional Vercel publication
+
+Only when the user requests publication, run:
+
+```sh
+bash scripts/deploy.sh deck.html --publish
+# Add --prod only when a production deployment is explicitly requested:
+bash scripts/deploy.sh reviewed-output/ --publish --prod
+```
+
+This helper needs Bash, Python 3.9+ and an already installed Vercel CLI on PATH. It does not install packages or start login. Run `vercel login` separately if needed, using the user's authorized account. Vercel keeps its normal project prompts; `--publish` records publication intent and the default target is preview. Preview URLs can expose the uploaded content according to the account's hosting settings, so review the actual files before uploading.
+
+A single HTML input must have embedded resources, as produced by the bundler; the helper does not follow local references or copy adjacent folders. For local assets, prepare a dedicated static output directory containing `index.html` and all intended public assets. The entire directory is staged: inspect its contents, avoid personal files, and verify the deck locally first. Hidden entries, symbolic links/junctions, and build/deployment configuration files are rejected. Use a clean publication copy instead of a source repository; do not remove protected files from the source just to pass these checks.
+
+Each run uses a fresh temporary root. CLI state stays inside that root, and cleanup only removes that run's staging tree; the source is never renamed or deleted. Staging is not a malware/content audit. The helper prints the Vercel CLI result rather than claiming permanence, free hosting, or access on every device. No real Vercel deployment is part of this repository's offline tests.

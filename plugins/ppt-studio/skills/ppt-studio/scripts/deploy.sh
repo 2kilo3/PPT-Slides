@@ -1,218 +1,118 @@
 #!/usr/bin/env bash
-# deploy.sh — Deploy a slide deck to Vercel for instant sharing
-#
-# Usage:
-#   bash scripts/deploy.sh <path-to-slide-folder-or-html>
-#
-# Examples:
-#   bash scripts/deploy.sh ./my-pitch-deck/
-#   bash scripts/deploy.sh ./presentation.html
-#
-# What this does:
-#   1. Checks if Vercel CLI is installed (installs if not)
-#   2. Checks if user is logged in (guides through login if not)
-#   3. Deploys the slide deck to a public URL
-#   4. Prints the live URL
-#
-# The deployed URL is permanent and works on any device (mobile, tablet, desktop).
-# No server to maintain — Vercel hosts it for free.
+# Publish only after the user requests external hosting; never install or log in automatically.
+# Usage: bash scripts/deploy.sh <reviewed-folder-or-bundled.html> --publish [--prod]
 set -euo pipefail
 
-# ─── Colors ────────────────────────────────────────────────
-RED='\033[0;31m'
-GREEN='\033[0;32m'
-CYAN='\033[0;36m'
-YELLOW='\033[1;33m'
-BOLD='\033[1m'
-NC='\033[0m'
-
-info()  { echo -e "${CYAN}ℹ${NC} $*"; }
-ok()    { echo -e "${GREEN}✓${NC} $*"; }
-warn()  { echo -e "${YELLOW}⚠${NC} $*"; }
-err()   { echo -e "${RED}✗${NC} $*" >&2; }
-
-# ─── Input validation ─────────────────────────────────────
-
-if [[ $# -lt 1 ]]; then
-    err "Usage: bash scripts/deploy.sh <path-to-slide-folder-or-html>"
-    err ""
-    err "Examples:"
-    err "  bash scripts/deploy.sh ./my-pitch-deck/"
-    err "  bash scripts/deploy.sh ./presentation.html"
-    exit 1
+fail() { printf '%s\n' "$*" >&2; exit 1; }
+if [[ $# -lt 2 || $# -gt 3 || "$2" != --publish ]]; then
+    fail 'Usage: bash scripts/deploy.sh <reviewed-folder-or-bundled.html> --publish [--prod]'
 fi
-
-INPUT="$1"
-
-# If input is a single HTML file, create a temp directory with it as index.html
-if [[ -f "$INPUT" && "$INPUT" == *.html ]]; then
-    DEPLOY_DIR=$(mktemp -d)
-    cp "$INPUT" "$DEPLOY_DIR/index.html"
-    PARENT_DIR=$(dirname "$INPUT")
-
-    # Parse the HTML for local file references (src="...", url('...'), href="...")
-    # and copy any referenced local files into the deploy directory
-    grep -oE '(src|href|url\()["'"'"']?[^"'"'"'>)]+' "$INPUT" 2>/dev/null | \
-        sed "s/^src=//; s/^href=//; s/^url(//; s/[\"']//g" | \
-        grep -v '^http' | grep -v '^data:' | grep -v '^#' | grep -v '^/' | \
-        sort -u | while read -r ref; do
-            # Resolve the reference relative to the HTML file's directory
-            SOURCE_FILE="$PARENT_DIR/$ref"
-            if [[ -e "$SOURCE_FILE" ]]; then
-                # Preserve directory structure for nested paths (e.g., assets/img.png)
-                TARGET_DIR="$DEPLOY_DIR/$(dirname "$ref")"
-                mkdir -p "$TARGET_DIR"
-                cp -r "$SOURCE_FILE" "$TARGET_DIR/"
-            fi
-        done
-
-    # Also copy any assets/ folder if it exists (common convention)
-    if [[ -d "$PARENT_DIR/assets" ]]; then
-        cp -r "$PARENT_DIR/assets" "$DEPLOY_DIR/assets" 2>/dev/null || true
-    fi
-
-    CLEANUP_TEMP=true
-    info "Single HTML file detected — preparing for deployment..."
-elif [[ -d "$INPUT" ]]; then
-    # Verify the folder has an index.html
-    if [[ ! -f "$INPUT/index.html" ]]; then
-        err "Folder '$INPUT' does not contain an index.html file."
-        err "Make sure your presentation folder has an index.html."
-        exit 1
-    fi
-    DEPLOY_DIR="$INPUT"
-    CLEANUP_TEMP=false
+FLAGS=()
+if [[ $# == 3 ]]; then
+    [[ "$3" == --prod ]] || fail 'Only --prod is supported after --publish.'
+    FLAGS+=(--prod)
+fi
+command -v vercel >/dev/null 2>&1 || fail 'Vercel CLI is not installed. Install it separately if deployment is wanted.'
+if command -v python3 >/dev/null 2>&1 && python3 -c 'import sys; sys.exit(sys.version_info < (3, 9))' >/dev/null 2>&1; then
+    PYTHON=python3
+elif command -v python >/dev/null 2>&1 && python -c 'import sys; sys.exit(sys.version_info < (3, 9))' >/dev/null 2>&1; then
+    PYTHON=python
 else
-    err "'$INPUT' is not a valid HTML file or directory."
-    exit 1
+    fail 'Python 3.9+ is required for safe staging; no software was installed.'
 fi
-
-# ─── Step 1: Check for Vercel CLI ─────────────────────────
-
-echo ""
-echo -e "${BOLD}╔══════════════════════════════════════╗${NC}"
-echo -e "${BOLD}║       Deploy Slides to Vercel         ║${NC}"
-echo -e "${BOLD}╚══════════════════════════════════════╝${NC}"
-echo ""
-
-if ! command -v npx &>/dev/null; then
-    err "Node.js is required but not installed."
-    err ""
-    err "Install Node.js:"
-    err "  macOS:   brew install node"
-    err "  or visit https://nodejs.org and download the installer"
-    exit 1
-fi
-
-info "Checking Vercel CLI..."
-
-# Check if vercel is available (either globally or via npx)
-if command -v vercel &>/dev/null; then
-    VERCEL_CMD="vercel"
-    ok "Vercel CLI found"
-elif npx --yes vercel --version &>/dev/null 2>&1; then
-    VERCEL_CMD="npx --yes vercel"
-    ok "Vercel CLI available via npx"
-else
-    info "Installing Vercel CLI..."
-    npm install -g vercel
-    VERCEL_CMD="vercel"
-    ok "Vercel CLI installed"
-fi
-
-# ─── Step 2: Check login status ───────────────────────────
-
-echo ""
-info "Checking Vercel login status..."
-
-# Try to check if logged in by running whoami
-if ! $VERCEL_CMD whoami &>/dev/null 2>&1; then
-    echo ""
-    warn "You're not logged in to Vercel yet."
-    echo ""
-    echo -e "${BOLD}To log in, run this command and follow the prompts:${NC}"
-    echo ""
-    echo "    vercel login"
-    echo ""
-    echo "If you don't have a Vercel account yet:"
-    echo "  1. Go to https://vercel.com/signup"
-    echo "  2. Sign up with GitHub, GitLab, email, or any method"
-    echo "  3. Come back here and run: vercel login"
-    echo "  4. Then re-run this deploy script"
-    echo ""
-
-    # Try interactive login
-    echo -e "${YELLOW}Attempting interactive login now...${NC}"
-    echo ""
-    $VERCEL_CMD login || {
-        err "Login failed. Please run 'vercel login' manually and try again."
-        [[ "$CLEANUP_TEMP" == "true" ]] && rm -rf "$DEPLOY_DIR"
-        exit 1
-    }
-    echo ""
-    ok "Logged in to Vercel!"
-fi
-
-VERCEL_USER=$($VERCEL_CMD whoami 2>/dev/null || echo "unknown")
-ok "Logged in as: $VERCEL_USER"
-
-# ─── Step 3: Deploy ───────────────────────────────────────
-
-echo ""
-info "Deploying slides..."
-echo ""
-
-# Deploy with sensible defaults:
-#   --yes: skip confirmation prompts
-#   --prod: deploy to production URL (not preview)
-#   --name: use the folder name as the project name
-DECK_NAME=$(basename "$DEPLOY_DIR")
-# If we used a temp dir, use the original filename without .html
-if [[ "$CLEANUP_TEMP" == "true" ]]; then
-    DECK_NAME=$(basename "$INPUT" .html)
-fi
-
-# Sanitize project name for Vercel:
-# - lowercase, replace spaces/special chars with hyphens
-# - collapse multiple hyphens, trim to 100 chars
-DECK_NAME=$(echo "$DECK_NAME" | tr '[:upper:]' '[:lower:]' | sed 's/[^a-z0-9._-]/-/g' | sed 's/--*/-/g' | sed 's/^-//;s/-$//' | cut -c1-100)
-
-# Vercel uses the directory name as the project name, so rename the deploy
-# directory to the sanitized deck name (avoids deprecated --name flag)
-if [[ "$CLEANUP_TEMP" == "true" ]]; then
-    RENAMED_DIR="$(dirname "$DEPLOY_DIR")/$DECK_NAME"
-    mv "$DEPLOY_DIR" "$RENAMED_DIR"
-    DEPLOY_DIR="$RENAMED_DIR"
-fi
-
-DEPLOY_OUTPUT=$($VERCEL_CMD deploy "$DEPLOY_DIR" --yes --prod 2>&1) || {
-    err "Deployment failed:"
-    echo "$DEPLOY_OUTPUT"
-    [[ "$CLEANUP_TEMP" == "true" ]] && rm -rf "$DEPLOY_DIR"
-    exit 1
+SCRIPT_DIR=$(cd -- "$(dirname -- "${BASH_SOURCE[0]}")" && pwd)
+STAGING=$("$PYTHON" -c 'import tempfile; print(tempfile.mkdtemp(prefix="ppt-slides-publish-").replace("\\", "/"))')
+cleanup() {
+    cd -- "$SCRIPT_DIR"
+    "$PYTHON" - "$STAGING" <<'PY'
+from pathlib import Path
+import shutil
+import stat
+import sys
+import tempfile
+root = Path(sys.argv[1])
+reparse = getattr(root.lstat(), 'st_file_attributes', 0) & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0) if root.exists() else 0
+if root.parent.resolve() != Path(tempfile.gettempdir()).resolve() or not root.name.startswith('ppt-slides-publish-') or root.is_symlink() or reparse:
+    raise SystemExit('Refusing to clean an unexpected staging path.')
+if root.exists():
+    shutil.rmtree(root)
+PY
 }
+trap cleanup EXIT
+trap 'exit 130' INT
+trap 'exit 143' TERM
 
-# Extract the URL from output
-DEPLOY_URL=$(echo "$DEPLOY_OUTPUT" | grep -o 'https://[^ ]*' | tail -1)
+DEPLOY_DIR=$("$PYTHON" - "$1" "$STAGING" "$SCRIPT_DIR" <<'PY'
+from pathlib import Path
+import re
+import shutil
+import stat
+import sys
 
-# ─── Step 4: Success ──────────────────────────────────────
+source = Path(sys.argv[1])
+root = Path(sys.argv[2]).resolve()
+sys.path.insert(0, sys.argv[3])
+from bundle import Resources
 
-echo ""
-echo -e "${BOLD}════════════════════════════════════════${NC}"
-ok "Slides deployed successfully!"
-echo ""
-echo -e "  ${BOLD}Live URL:${NC}  $DEPLOY_URL"
-echo ""
-echo "  This URL works on any device — phones, tablets, laptops."
-echo "  Share it via Slack, email, text, or anywhere."
-echo ""
-echo -e "  ${CYAN}Tip:${NC} To take it down later, visit https://vercel.com/dashboard"
-echo -e "       and delete the project '${DECK_NAME}'."
-echo -e "${BOLD}════════════════════════════════════════${NC}"
-echo ""
 
-# ─── Cleanup ──────────────────────────────────────────────
+def linked(path):
+    return path.is_symlink() or bool(getattr(path.lstat(), 'st_file_attributes', 0) & getattr(stat, 'FILE_ATTRIBUTE_REPARSE_POINT', 0))
 
-if [[ "$CLEANUP_TEMP" == "true" ]]; then
-    rm -rf "$DEPLOY_DIR"
-fi
+
+def check_file(path, base):
+    if linked(path) or not path.resolve().is_relative_to(base):
+        raise ValueError(f'Linked or outside file is not allowed: {path}')
+    if not path.is_file():
+        raise ValueError(f'Only regular files can be published: {path}')
+
+
+try:
+    if linked(source):
+        raise ValueError('Use a real HTML file or reviewed output directory, not a link.')
+    source = source.resolve(strict=True)
+    name = re.sub(r'[^a-z0-9-]+', '-', source.stem.lower()).strip('-')[:80] or 'slides'
+    destination = root / name
+    destination.mkdir()
+    if source.is_file() and source.suffix.lower() in ('.html', '.htm'):
+        # shortcut: single-file deployment requires embedded resources; use a reviewed directory for assets.
+        parser = Resources()
+        parser.feed(source.read_text(encoding='utf-8'))
+        for value in re.findall(r'url\(\s*[\'\"]?([^\)\'\"]+)', '\n'.join(parser.css), re.I):
+            if not value.startswith(('data:', '#')):
+                parser.missing.append(f'CSS url({value})')
+        if re.search(r'@import\s', '\n'.join(parser.css), re.I):
+            parser.missing.append('CSS @import')
+        if parser.missing:
+            raise ValueError('Bundle resources first, or publish a reviewed output folder: ' + '; '.join(parser.missing))
+        shutil.copyfile(source, destination / 'index.html')
+    elif source.is_dir():
+        if not (source / 'index.html').is_file():
+            raise ValueError('The reviewed output directory must contain index.html.')
+        for path in source.rglob('*'):
+            relative = path.relative_to(source)
+            if any(part.startswith('.') for part in relative.parts):
+                raise ValueError(f'Hidden files/directories must be removed from the publication copy: {relative}')
+            if linked(path) or not path.resolve().is_relative_to(source):
+                raise ValueError(f'Links or outside paths are not allowed: {relative}')
+            if path.name.lower() in ('package.json', 'vercel.json', 'vercel.yaml', 'vercel.yml'):
+                raise ValueError(f'Publish static output, without build/deployment configuration: {relative}')
+            target = destination / relative
+            if path.is_dir():
+                target.mkdir(parents=True, exist_ok=True)
+            else:
+                check_file(path, source)
+                target.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copyfile(path, target)
+    else:
+        raise ValueError('Input must be an HTML file or a reviewed static output directory.')
+    print(destination.as_posix())
+except (OSError, ValueError) as error:
+    raise SystemExit(str(error))
+PY
+)
+
+# Keep CLI project discovery and any generated state inside the disposable staging root.
+cd -- "$STAGING"
+vercel whoami >/dev/null 2>&1 || fail 'Vercel authentication failed. Run vercel login separately, then retry.'
+printf '%s\n' "Publishing the reviewed static files from: $1" 'Vercel will prompt for its project settings; default target is a preview deployment.'
+vercel deploy "$DEPLOY_DIR" "${FLAGS[@]}"

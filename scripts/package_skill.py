@@ -6,8 +6,8 @@ import shutil
 ROOT = Path(__file__).resolve().parents[1]
 TARGET = ROOT / 'plugins/ppt-studio/skills/ppt-studio'
 FILES = ['SKILL.md', 'html-template.md', 'viewport-base.css', 'animation-patterns.md',
-         'STYLE_PRESETS.md', 'LICENSE', 'UPSTREAM.md', 'package.json']
-DIRS = ['assets', 'references', 'agents', 'bold-template-pack', 'examples', 'tests']
+         'STYLE_PRESETS.md', 'LICENSE', 'UPSTREAM.md', 'THIRD_PARTY_NOTICES.md', 'package.json', 'package-lock.json']
+DIRS = ['assets', 'references', 'agents', 'bold-template-pack', 'examples', 'tests', 'docs']
 SCRIPTS = ['bundle.py', 'check-deck.cjs', 'extract-pptx.py', 'export-pdf.sh', 'deploy.sh']
 
 

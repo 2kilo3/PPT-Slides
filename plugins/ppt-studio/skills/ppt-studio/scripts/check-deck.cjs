@@ -1,4 +1,4 @@
-// Render and inspect an authored, trusted PPT Studio deck. No network access.
+// Render a trusted authored deck; HTTP(S) resources are blocked, not all browser network channels.
 const { chromium } = require('playwright');
 const fs = require('node:fs/promises');
 const path = require('node:path');

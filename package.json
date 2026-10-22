@@ -5,7 +5,7 @@
   "description": "Development checks and export tools for the PPT Studio skill",
   "license": "MIT",
   "scripts": {
-    "test": "python -m unittest discover -s tests -p test_*.py && node tests/runtime.cjs && node tests/exports.cjs"
+    "test": "python -m unittest discover -s tests -p test_*.py && node tests/export-server.cjs && node tests/runtime.cjs && node tests/exports.cjs"
   },
   "devDependencies": {
     "playwright": "1.62.1",

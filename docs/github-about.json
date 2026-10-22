@@ -1,0 +1,4 @@
+{
+  "description": "Create editable offline HTML presentations with speaker notes, presenter mode, visual style previews and PDF/PPTX export. Agent skill for Codex, Claude Code and dsh.",
+  "topics": ["agent-skills", "presentations", "html-slides", "codex", "claude-code", "speaker-notes", "powerpoint", "deepseek-harness"]
+}

@@ -135,8 +135,8 @@ cat > "$TEMP_SCRIPT" << 'EXPORT_SCRIPT'
 
 import { chromium } from 'playwright';
 import { createServer } from 'http';
-import { readFileSync, existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
-import { join, extname, resolve } from 'path';
+import { readFileSync, realpathSync, existsSync, mkdirSync, unlinkSync, writeFileSync } from 'fs';
+import { join, extname, resolve, relative, isAbsolute } from 'path';
 import { execSync } from 'child_process';
 
 const SERVE_DIR = process.argv[2];
@@ -167,10 +167,20 @@ const MIME_TYPES = {
 };
 
 const server = createServer((req, res) => {
-  // Decode URL-encoded characters (e.g., %20 → space) so filenames with spaces resolve correctly
-  const decodedUrl = decodeURIComponent(req.url);
-  let filePath = join(SERVE_DIR, decodedUrl === '/' ? HTML_FILE : decodedUrl);
+  let decodedUrl;
   try {
+    decodedUrl = decodeURIComponent(new URL(req.url, 'http://127.0.0.1').pathname);
+  } catch {
+    res.writeHead(400); res.end('Bad request'); return;
+  }
+  try {
+    // Resolve symlinks before checking containment so only presentation assets are served.
+    const root = realpathSync(SERVE_DIR);
+    const filePath = realpathSync(resolve(root, decodedUrl === '/' ? HTML_FILE : '.' + decodedUrl));
+    const within = relative(root, filePath);
+    if (within === '..' || within.startsWith('../') || within.startsWith('..\\') || isAbsolute(within)) {
+      res.writeHead(403); res.end('Forbidden'); return;
+    }
     const content = readFileSync(filePath);
     const ext = extname(filePath).toLowerCase();
     res.writeHead(200, { 'Content-Type': MIME_TYPES[ext] || 'application/octet-stream' });
@@ -183,7 +193,7 @@ const server = createServer((req, res) => {
 
 // Find a free port
 const port = await new Promise((resolve) => {
-  server.listen(0, () => resolve(server.address().port));
+  server.listen(0, '127.0.0.1', () => resolve(server.address().port));
 });
 
 console.log(`  Local server on port ${port}`);
@@ -196,7 +206,7 @@ const page = await browser.newPage({
 });
 
 // Load the presentation
-await page.goto(`http://localhost:${port}/`, { waitUntil: 'networkidle' });
+await page.goto(`http://127.0.0.1:${port}/`, { waitUntil: 'networkidle' });
 
 // Wait for fonts to load
 await page.evaluate(() => document.fonts.ready);

@@ -19,6 +19,8 @@ Organize and refine content as needed. There is no mandatory web-research or cod
 
 Keep a lightweight outline mapping required content and assets to each slide's stable ID, main point and notes. When preserving a manuscript, keep the required original text in the requested order in the notes. Split screen text from spoken explanation. Draft notes and timings together with the slides; do not treat notes as an afterthought.
 
+For drafting or revising slide text and notes, read [writing.md](references/writing.md). Preserve facts, attribution and uncertainty while removing empty repetition; evidence and the user's required content take priority over rhetorical strength.
+
 ## Choose the visual direction
 
 Reuse all three visual sources below; none is limited to the starter example:
