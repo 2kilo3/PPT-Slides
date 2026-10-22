@@ -1,0 +1,14 @@
+{
+  "name": "ppt-studio",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Development checks and export tools for the PPT Studio skill",
+  "license": "MIT",
+  "scripts": {
+    "test": "python -m unittest discover -s tests -p test_*.py && node tests/runtime.cjs && node tests/exports.cjs"
+  },
+  "devDependencies": {
+    "playwright": "1.62.1",
+    "pptxgenjs": "4.0.1"
+  }
+}

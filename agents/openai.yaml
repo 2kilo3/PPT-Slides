@@ -1,0 +1,4 @@
+interface:
+  display_name: "PPT Studio"
+  short_description: "Design HTML slides with presenter notes and portable editing"
+  default_prompt: "Use $ppt-studio to turn my materials into a polished HTML presentation with speaker notes."

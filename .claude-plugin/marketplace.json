@@ -1,18 +1,21 @@
 {
   "$schema": "https://anthropic.com/claude-code/marketplace.schema.json",
-  "name": "frontend-slides",
-  "description": "Create stunning, animation-rich HTML presentations from scratch or by converting PowerPoint files.",
+  "name": "ppt-studio",
   "owner": {
-    "name": "zarazhangrui",
-    "url": "https://github.com/zarazhangrui"
+    "name": "2kilo3",
+    "url": "https://github.com/2kilo3"
   },
   "plugins": [
     {
-      "name": "frontend-slides",
-      "description": "Zero-dependency HTML presentation generator with safe presets, bold template-library styles, PPT conversion, and anti-AI-slop design philosophy.",
-      "source": "./plugins/frontend-slides",
+      "name": "ppt-studio",
+      "description": "HTML PPT creation with visual design, presenter and editable notes",
+      "source": "./plugins/ppt-studio",
       "category": "productivity",
-      "tags": ["presentations", "slides", "html", "design", "powerpoint", "templates"]
+      "tags": [
+        "presentations",
+        "slides",
+        "html"
+      ]
     }
   ]
 }

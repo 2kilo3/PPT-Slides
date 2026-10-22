@@ -1,0 +1,20 @@
+{
+  "name": "ppt-studio",
+  "version": "0.1.0",
+  "description": "HTML presentation design, presenter tools, editable notes and portable delivery",
+  "skills": "./skills/",
+  "author": {
+    "name": "2kilo3",
+    "url": "https://github.com/2kilo3"
+  },
+  "homepage": "https://github.com/2kilo3/ppt-studio",
+  "repository": "https://github.com/2kilo3/ppt-studio",
+  "license": "MIT",
+  "keywords": [
+    "presentations",
+    "slides",
+    "html",
+    "powerpoint",
+    "templates"
+  ]
+}

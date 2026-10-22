@@ -1,0 +1,15 @@
+/* PPT Studio runtime chrome; authored slides keep their own design system. */
+.studio-toolbar{position:fixed;z-index:10000;top:10px;left:10px;display:flex;flex-wrap:wrap;gap:6px;max-width:calc(100vw - 20px);padding:8px;border:1px solid #b8c2cb;border-radius:8px;background:#fff;color:#152330;font:14px/1.4 system-ui,sans-serif;opacity:.12;transition:opacity .15s}
+.studio-toolbar:hover,.studio-toolbar:focus-within,body.studio-editing .studio-toolbar{opacity:1}
+.studio-toolbar button{font:inherit;color:inherit;background:#fff;border:1px solid #8393a1;border-radius:4px;padding:5px 9px;cursor:pointer}
+.studio-toolbar button:focus-visible{outline:3px solid #1672bc;outline-offset:2px}
+.studio-toolbar [role=status]{align-self:center;max-width:36em}
+.studio-editing [data-edit-id]{outline:2px dashed #1672bc;outline-offset:5px;cursor:text}
+.slide[aria-hidden=true]{visibility:hidden!important;opacity:0!important;pointer-events:none!important}
+.slide[aria-hidden=false]{visibility:visible;opacity:1}
+.slide.active .reveal{animation:studio-enter .48s cubic-bezier(.2,.8,.2,1) both;animation-delay:var(--reveal-delay,0ms)}
+@keyframes studio-enter{from{opacity:0;translate:0 16px}to{opacity:1;translate:0 0}}
+.studio-editing .reveal,.studio-static .reveal{animation:none!important;transition:none!important;opacity:1!important;translate:none!important;transform:none!important}
+@media(pointer:coarse){.studio-toolbar{opacity:1}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}.reveal{opacity:1!important;translate:none!important;transform:none!important}}
+@media print{.studio-toolbar{display:none!important}.slide[aria-hidden=true]{visibility:visible!important;opacity:1!important}.reveal{animation:none!important;opacity:1!important;translate:none!important;transform:none!important}}

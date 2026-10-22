@@ -1,5 +1,7 @@
 .DS_Store
-.claude-design/
 node_modules/
 .vercel/
 *.log
+__pycache__/
+work/
+.claude-design/
