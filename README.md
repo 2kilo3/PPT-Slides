@@ -1,4 +1,6 @@
-# PPT Studio
+# PPT-Slides
+
+GitHub 私有仓库：[2kilo3/PPT-Slides](https://github.com/2kilo3/PPT-Slides)。文件型 skill 的调用名为 `$ppt-studio`，Claude 插件入口为 `/ppt-studio:ppt-studio`。
 
 面向多种场景的 HTML PPT 制作 skill。以 frontend-slides 的视觉探索和模板为基础，加入独立实现的演讲者、讲稿、编辑导出及验收能力，并吸收实际制作中的风格漂移、中文排版和修改同步经验。
 
