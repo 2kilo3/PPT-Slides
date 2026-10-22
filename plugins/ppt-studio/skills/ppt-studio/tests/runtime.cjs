@@ -90,8 +90,9 @@ const { execFileSync } = require('node:child_process');
     await reopened.evaluate(()=>new Promise(resolve=>requestAnimationFrame(resolve)));
     const rect=await reopened.locator('.deck-stage').boundingBox();assert.ok(Math.abs(rect.width/rect.height-16/9)<0.001);
     passed.push('reduced motion and phone 16:9 geometry');
-    await popup.close();await page.evaluate(()=>{window.open=()=>null;PPTStudio.openPresenter();});
-    assert.match(await page.locator('[role=status]').textContent(),/允许弹窗/);
+    // Use a page without a presenter so popup-close propagation cannot race this check.
+    await popup.close();await updated.evaluate(()=>{window.open=()=>null;PPTStudio.openPresenter();});
+    assert.match(await updated.locator('[role=status]').textContent(),/允许弹窗/);
     passed.push('blocked presenter popup reports recovery without exposing notes');
     assert.deepEqual(errors,[]);assert.deepEqual(network,[]);
     await fs.writeFile(path.join(work,'runtime-report.json'),JSON.stringify({status:'PASS',passed,errors,network},null,2));
