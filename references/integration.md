@@ -2,7 +2,7 @@
 
 | Area | Approach | Status |
 |---|---|---|
-| Content discovery, presets, template library | Retain MIT Frontend Slides resources; adapt entrypoint to honor settled choices | Implemented |
+| Content discovery and visual sources | Reuse all 12 basic presets and 34 indexed templates; retain free design as an equal authoring path | Resources included; entrypoint routes all three to shared runtime |
 | Style consistency | Keep selected samples and explicit palette/type/layout rules; compare revisions | Skill instructions |
 | Chinese density and diagrams | Real-content samples, readable type, semantic captions and source retention | Skill instructions; per-deck visual QA |
 | Playback and motion | One fixed-stage runtime, focus-safe keys/swipe/wheel, reduced motion | Implemented |

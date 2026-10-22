@@ -21,6 +21,16 @@ Keep a lightweight outline mapping required content and assets to each slide's s
 
 ## Choose the visual direction
 
+Reuse all three visual sources below; none is limited to the starter example:
+
+| Source | Included resources | How to reuse |
+|---|---|---|
+| Basic styles | All 12 presets in [STYLE_PRESETS.md](STYLE_PRESETS.md), including Paper & Ink, Swiss Modern and Neon Cyber | Apply the chosen palette, typography and signature elements to the user's content. |
+| Design templates | All 34 indexed templates in [bold-template-pack](bold-template-pack/selection-index.json), including BlockFrame, Cobalt Grid and Signal | Shortlist from the index, inspect preview cards, then use the selected full design document. |
+| Free design | A new visual direction based on the brief, content and references | Create a real-content sample, then reuse its design rules throughout the deck; no existing template is required. |
+
+The included counts describe the current library, not a cap on future additions. When the user asks to browse more styles or see the full catalog, show the available names and short descriptions from these resources and offer another relevant preview batch. Do not restrict later choices to the first three samples.
+
 Honor an explicit template or reference. For an existing approved deck, continue its design without reopening style selection unless asked.
 
 With no settled direction, read [STYLE_PRESETS.md](STYLE_PRESETS.md) and the compact [template index](bold-template-pack/selection-index.json). Offer three genuinely different previews by default: a restrained option, a suitable bold template and a freely designed option. Adjust the count to the user's request. Read only shortlisted `preview.md` files, then the selected `design.md`; avoid loading all templates.
@@ -28,6 +38,8 @@ With no settled direction, read [STYLE_PRESETS.md](STYLE_PRESETS.md) and the com
 Use real deck content in the previews. Show a title and a representative content layout so the user can judge density and Chinese typography. Internal labels such as template names, preview, metadata or filenames belong outside the slides. Match the occasion rather than treating any style as the universal default.
 
 After selection, retain the reference screenshots and record its palette, typography/weights, title treatment, spacing, border/shadow language and motion rhythm. Expand this system across the deck. Do not silently change title strips, backgrounds or font weights. Recheck representative pages against the selected reference after revisions. Read [design-and-qa.md](references/design-and-qa.md) for the experience-based checks.
+
+All three sources use the same PPT Studio playback, presenter, notes, editing and export capabilities. Reuse the selected visual system while adapting its markup to the runtime contract; never let the shared starter's appearance overwrite the selected style or import a second player from a template.
 
 ## Build and integrate
 
